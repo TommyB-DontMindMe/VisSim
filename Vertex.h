@@ -28,6 +28,8 @@ struct  Vertex {
 
     //! Overloaded ostream operator which reads all vertex data from an open textfile stream
     friend std::istream& operator>> (std::istream&, Vertex&);
+
+    QVector3D pos() const { return QVector3D(x, y, z); }
 };
 
 #endif // VERTEX_H

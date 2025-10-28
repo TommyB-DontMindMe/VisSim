@@ -3,12 +3,9 @@
 #include <QFile>
 #include <fstream>
 #include "VulkanWindow.h"
-#include "WorldAxis.h"
 #include "Triangle.h"
 #include "TriangleSurface.h"
-#include "HeightMap.h"
 #include "stb_image.h"
-#include "ObjMesh.h"
 
 /*** Renderer class ***/
 Renderer::Renderer(QVulkanWindow *w, bool msaa)
@@ -26,18 +23,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
         }
     }
 
-    mObjects.push_back(new Triangle());
-    mObjects.push_back((new TriangleSurface()));
-    mObjects.push_back((new WorldAxis()));
-	mObjects.push_back(new HeightMap());
-    mObjects.push_back(new ObjMesh(assetPath + "suzanne.obj"));
-    // Dag 030225
-    mObjects.at(0)->setName("tri");
-    mObjects.at(1)->setName("quad");
-    mObjects.at(2)->setName("axis");
-	mObjects.at(3)->setName("terrain");
-    mObjects.at(4)->setName("suzanne");
-    static_cast<HeightMap*>(mObjects.at(3))->makeTerrain(assetPath + "Heightmap.jpg");
+    mObjects.push_back(new TriangleSurface(assetPath + "surface.obj"));
+    mObjects.at(0)->setName("Ground");
 
     // **************************************
     // Objects in optional map
@@ -348,9 +335,6 @@ void Renderer::startNextFrame()
     /***************************************/
 
     mDeviceFunctions->vkCmdEndRenderPass(commandBuffer);
-
-    //Hardcoded!!!
-    mObjects.at(1)->rotate(1.0f, 0.0f, 0.0f, 1.0f);
     
     mWindow->frameReady();
     mWindow->requestUpdate(); // render continuously, throttled by the presentation rate
