@@ -166,13 +166,9 @@ bool TriangleSurface::CreateFromObj(const std::string &filename)
                 }
                 mIndices.push_back(temp_index++);
             }
+            mTris.push_back(Triangle(mVertices[temp_index -3], mVertices[temp_index - 2], mVertices[temp_index - 1]));
             continue;
         }
-        // Assigning Neighbors
-        // if (oneWord == "fn")
-        // {
-
-        // }
     }
     fileIn.close();
 

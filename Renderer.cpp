@@ -26,6 +26,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj"));
     mObjects.at(0)->setName("Ground");
 
+
+
     // **************************************
     // Objects in optional map
     // **************************************
@@ -37,6 +39,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
 
     //Need access to our VulkanWindow so making a convenience pointer
     mVulkanWindow = dynamic_cast<VulkanWindow*>(w);
+
+    mTimer.start();
 }
 
 //Automatically called by Qt on Renderer startup
@@ -291,6 +295,8 @@ void Renderer::initSwapChainResources()
 
 void Renderer::startNextFrame()
 {
+    deltaTime = mTimer.elapsed() / 1000.0f;
+    mTimer.restart();
     //Handeling input from keyboard and mouse is done in VulkanWindow
     //Has to be done each frame to get smooth movement
     mVulkanWindow->handleInput();

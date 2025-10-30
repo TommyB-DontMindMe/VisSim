@@ -3,6 +3,7 @@
 
 #include <QVulkanWindow>
 #include <vector>
+#include <qelapsedtimer.h>
 #include <unordered_map>
 #include "Camera.h"
 #include "VisualObject.h"
@@ -77,6 +78,8 @@ protected:
 
 private:
     friend class VulkanWindow;
+    QElapsedTimer mTimer;
+    float deltaTime{0.0f};
 	std::vector<VisualObject*> mObjects;    //All objects in the program  
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
