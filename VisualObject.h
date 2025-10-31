@@ -34,6 +34,7 @@ public:
 
     QVector3D getPosition();
     void setPosition(float x, float y, float z);
+    void setPosition(const QVector3D& newPosition) { setPosition(newPosition.x(), newPosition.y(), newPosition.z()); };
 
 protected:
     std::vector<Vertex> mVertices;

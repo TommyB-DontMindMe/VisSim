@@ -2,6 +2,8 @@
 #include <QVulkanFunctions>
 #include <QFile>
 #include <fstream>
+#include "ObjMesh.h"
+#include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
 #include "TriangleSurface.h"
@@ -25,6 +27,16 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
 
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj"));
     mObjects.at(0)->setName("Ground");
+
+    mObjects.push_back(new ObjMesh(assetPath + "sphere.obj"));
+    mObjects.at(1)->setPosition(-0.5, 1.2, 0.0);
+    mObjects.at(1)->setName("Sphere");
+
+
+
+    mPhysicsObjects.push_back(new Sphere(mObjects.at(1)));
+    mPhysicsObjects.at(0)->mGravity = &mGravity;
+    mPhysicsObjects.at(0)->mPosition = QVector3D(-0.5, 1.2, 0.0);
 
 
 
@@ -301,6 +313,10 @@ void Renderer::startNextFrame()
     //Has to be done each frame to get smooth movement
     mVulkanWindow->handleInput();
     mCamera.update();               //input can have moved the camera
+
+    for (PhysicsObject* p : mPhysicsObjects) {
+        p->Update(deltaTime);
+    }
 
     VkCommandBuffer commandBuffer = mWindow->currentCommandBuffer();
 

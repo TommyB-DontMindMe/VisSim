@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "Camera.h"
 #include "VisualObject.h"
+#include "PhysicsObject.h"
 #include "Utilities.h"
 
 class Renderer : public QVulkanWindowRenderer
@@ -80,7 +81,9 @@ private:
     friend class VulkanWindow;
     QElapsedTimer mTimer;
     float deltaTime{0.0f};
-	std::vector<VisualObject*> mObjects;    //All objects in the program  
+    std::vector<VisualObject*> mObjects;    //All objects in the program
+    std::vector<PhysicsObject*> mPhysicsObjects;
+    QVector3D mGravity{0.0, -9.8, 0.0};
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
 	//Start of Uniforms and DescriptorSets
