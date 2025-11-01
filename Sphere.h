@@ -9,7 +9,7 @@ public:
     Sphere(VisualObject* v);
     VisualObject* mVisual;
 
-    float mRadius{0.0};
+    float mRadius{0.15};
     virtual void Update(float deltaTime) override;
 };
 

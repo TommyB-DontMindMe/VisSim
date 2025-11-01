@@ -12,6 +12,8 @@ public:
     QVector3D VectorB() const;
 
     float Distance(QVector3D point) const;
+    QVector3D SurfaceNormal() const { return mNormal; };
+    QVector3D ClosestPoint(const QVector3D& point) const;
     void Update();
 
     //std::weak_ptr<Triangle> n0, n1, n2; // Neighbors opposite each Vertex
