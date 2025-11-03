@@ -26,6 +26,8 @@ void Sphere::Update(float deltaTime, const std::vector<Triangle> &triangles)
 void Sphere::HandleCollisions(QVector3D& newPosition, float deltaTime, const std::vector<Triangle>& triangles)
 {
     for (const Triangle& tri : triangles) {
+        if (QVector3D::dotProduct(newPosition - mPosition, tri.SurfaceNormal()) > 0) continue; // Ignore triangle the sphere is not approaching
+
         QVector3D closest = tri.ClosestPoint(mPosition);
         QVector3D toSphere = newPosition - closest;
         float distance = toSphere.length();

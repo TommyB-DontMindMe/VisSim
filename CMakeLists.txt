@@ -24,6 +24,7 @@ qt_add_executable(QtVulkanApp
     ObjMesh.h ObjMesh.cpp
     Sphere.h Sphere.cpp
     PhysicsObject.h PhysicsObject.cpp
+    PointCloud.h PointCloud.cpp
 )
 # Define the shader files
 set(SHADER_FILES

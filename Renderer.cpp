@@ -3,6 +3,7 @@
 #include <QFile>
 #include <fstream>
 #include "ObjMesh.h"
+#include "PointCloud.h"
 #include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
@@ -33,7 +34,6 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
     mObjects.at(1)->setName("Sphere");
 
 
-
     mSphere = new Sphere(mObjects.at(1));
     mSphere->mGravity = &mGravity;
     mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
@@ -41,6 +41,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
     mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
 
 
+    // mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", QVector3D(-25,-25,-25), QVector3D(25,25,25)));
 
     // **************************************
     // Objects in optional map
@@ -48,7 +49,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
     for (auto it=mObjects.begin(); it!=mObjects.end(); it++)
         mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
 
-	//Inital position of the camera
+    //Inital position of the camera
     mCamera.setPosition(QVector3D(-0.5, -0.5, -8));
 
     //Need access to our VulkanWindow so making a convenience pointer
@@ -261,7 +262,7 @@ void Renderer::initResources()
 
 	//Making a pipeline for drawing lines
 	mColorMaterial.pipeline = mPipeline1;                       // reusing most of the settings from the first pipeline
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;   // draw lines
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;   // draw lines
     rasterization.polygonMode = VK_POLYGON_MODE_FILL;           // VK_POLYGON_MODE_LINE will make a wireframe; VK_POLYGON_MODE_FILL
     rasterization.lineWidth = 5.0f;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
