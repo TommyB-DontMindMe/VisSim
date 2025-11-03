@@ -9,6 +9,8 @@
 #include "VisualObject.h"
 #include "PhysicsObject.h"
 #include "Utilities.h"
+class Sphere;
+class TriangleSurface;
 
 class Renderer : public QVulkanWindowRenderer
 {
@@ -83,6 +85,11 @@ private:
     float deltaTime{0.0f};
     std::vector<VisualObject*> mObjects;    //All objects in the program
     std::vector<PhysicsObject*> mPhysicsObjects;
+
+    // Temporary pointers for easy access
+    Sphere* mSphere;
+    TriangleSurface* mSurface;
+
     QVector3D mGravity{0.0, -9.8, 0.0};
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 

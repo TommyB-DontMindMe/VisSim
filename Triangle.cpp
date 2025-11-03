@@ -11,63 +11,52 @@ Triangle::Triangle(Vertex &A, Vertex &B, Vertex &C) : v0(&A), v1(&B), v2(&C)
 QVector3D Triangle::VectorA() const { return v1->pos() - v0->pos(); }
 QVector3D Triangle::VectorB() const { return v2->pos() - v0->pos(); }
 
-float Triangle::Distance(QVector3D point) const
+float Triangle::Distance(const QVector3D &P) const
 {
-    return QVector3D::dotProduct(mPlaneEquation.toVector3D(), point) + mPlaneEquation.w();
+    return P.distanceToPoint(ClosestPoint(P));
+}
+
+QVector3D Triangle::ProjectPointOnPlane(const QVector3D &P) const
+{
+    QVector3D AP = P - v0->pos();
+    float t = QVector3D::dotProduct(AP, mNormal) / mNormal.lengthSquared();
+    return P - (mNormal * t);
+}
+
+QVector3D Triangle::ProjectPointOnEdge(const QVector3D &P, const QVector3D &A, const QVector3D &B) const
+{
+    QVector3D AB = B - A;
+    QVector3D AP = P - A;
+
+    float t = std::max(0.0f, std::min(1.0f, QVector3D::dotProduct(AP, AB) / AB.lengthSquared()));
+    return A + AB * t;
 }
 
 QVector3D Triangle::ClosestPoint(const QVector3D &point) const
 {
-    QVector3D AB = VectorA();
-    QVector3D AC = VectorB();
-    QVector3D AP = point - v0->pos();
+    QVector3D P = ProjectPointOnPlane(point);
+    QVector3D AB = VectorA(), AC = VectorB(), AP = P - v0->pos();
 
-    float a = QVector3D::dotProduct(AB, AB);
-    float b = QVector3D::dotProduct(AB, AC);
-    float c = QVector3D::dotProduct(AC, AC);
-    float d = QVector3D::dotProduct(AB, AP);
-    float e = QVector3D::dotProduct(AC, AP);
+    // from Real Time Collision Detection (Ericson, 2005, p.47-48)
+    float d00 = QVector3D::dotProduct(AB, AB);  //
+    float d01 = QVector3D::dotProduct(AB, AC);  // These could be calculated in the update function and cached for this function
+    float d11 = QVector3D::dotProduct(AC, AC);  //
+    float d20 = QVector3D::dotProduct(AP, AB);
+    float d21 = QVector3D::dotProduct(AP, AC);
+    float denom = d00 * d11 - d01 * d01;        // This one too
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
 
-    float det = a * c - b * b;
-    float s = b * e - c * d;
-    float t = b * d - a * e;
+    // If the projected point is inside the triangle then it will be the closes point
+    if (v >= 0 && w >= 0 && u >= 0) return P;
+    // The closest point lies on AC
+    if (v < 0) return ProjectPointOnEdge(P, v0->pos(), v2->pos());
+    // The closest point lies on AB
+    if (w < 0) return ProjectPointOnEdge(P, v0->pos(), v1->pos());
+    // The closest point lies on BC
+    return ProjectPointOnEdge(P, v1->pos(), v2->pos());
 
-    if (s + t <= det) {
-        if (s < 0.0f) {
-            if (t < 0.0f){
-                s = std::clamp(-d / a, 0.0f, 1.0f);
-                t = 0.0f;
-            } else {
-                s = 0.0f;
-                t = std::clamp(e / c, 0.0f, 1.0f);
-            }
-        } else if (t < 0.0f) {
-            s = std::clamp(d / a, 0.0f, 1.0f);
-            t = 0.0f;
-        } else {
-            float invDet = 1.0f / det;
-            s *= invDet;
-            t *= invDet;
-        }
-    } else {
-        if (s < 0.0f) {
-            s = 0.0f;
-            t = 1.0f;
-        } else if (t < 0.0f) {
-            s = 1.0f;
-            t = 0.0f;
-        } else {
-            float numer = c + e - b - d;
-            if (numer <= 0.0f) {
-                s = 0.0f;
-            } else {
-                float denom = a - 2.0f * b + c;
-                s = (numer >= denom ? 1.0f : numer / denom);
-            }
-            t = 1.0f - s;
-        }
-    }
-    return v0->pos() + s * AB + t * AC;
 }
 
 QVector3D Triangle::CalculateNormal() const
@@ -75,19 +64,8 @@ QVector3D Triangle::CalculateNormal() const
     return QVector3D::crossProduct(VectorA(), VectorB());
 }
 
-QVector4D Triangle::CalculatePlaneEquation() const
-{
-    QVector3D normalizedNormal = mNormal.normalized();
-    float x = normalizedNormal.x();
-    float y = normalizedNormal.y();
-    float z = normalizedNormal.z();
-    float w = -x * v0->pos().x() - y * v0->y - z * v0->z;
-    return QVector4D(x, y, z, w);
-}
-
 
 void Triangle::Update()
 {
     mNormal = CalculateNormal();
-    mPlaneEquation = CalculatePlaneEquation();
 }

@@ -34,9 +34,11 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
 
 
 
-    mPhysicsObjects.push_back(new Sphere(mObjects.at(1)));
-    mPhysicsObjects.at(0)->mGravity = &mGravity;
-    mPhysicsObjects.at(0)->mPosition = QVector3D(-0.5, 1.2, 0.0);
+    mSphere = new Sphere(mObjects.at(1));
+    mSphere->mGravity = &mGravity;
+    mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
+
+    mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
 
 
 
@@ -314,9 +316,10 @@ void Renderer::startNextFrame()
     mVulkanWindow->handleInput();
     mCamera.update();               //input can have moved the camera
 
-    for (PhysicsObject* p : mPhysicsObjects) {
-        p->Update(deltaTime);
-    }
+    // for (PhysicsObject* p : mPhysicsObjects) {
+    //     p->Update(deltaTime);
+    // }
+    mSphere->Update(deltaTime, mSurface->mTris);
 
     VkCommandBuffer commandBuffer = mWindow->currentCommandBuffer();
 

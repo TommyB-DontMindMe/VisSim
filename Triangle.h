@@ -11,8 +11,10 @@ public:
     QVector3D VectorA() const;
     QVector3D VectorB() const;
 
-    float Distance(QVector3D point) const;
+    float Distance(const QVector3D& P) const;
     QVector3D SurfaceNormal() const { return mNormal; };
+    QVector3D ProjectPointOnPlane(const QVector3D& P) const;
+    QVector3D ProjectPointOnEdge(const QVector3D&P, const QVector3D& A, const QVector3D& B) const; // Not really specific to triangles, should probably be moved elsewhere
     QVector3D ClosestPoint(const QVector3D& point) const;
     void Update();
 
@@ -23,8 +25,6 @@ private:
 
     QVector3D mNormal;
     QVector3D CalculateNormal() const;
-    QVector4D mPlaneEquation;
-    QVector4D CalculatePlaneEquation() const;
 };
 
 #endif // TRIANGLE_H
