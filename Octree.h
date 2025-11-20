@@ -7,7 +7,7 @@
 class Octree
 {
 public:
-    Octree(const AABB& bounds, int depth = 0, int maxDepth = 6, int maxContent = 8);
+    Octree(const AABB& bounds = AABB(), int depth = 0, int maxDepth = 6, int maxContent = 8);
 
     AABB mBounds;
     int mDepth;

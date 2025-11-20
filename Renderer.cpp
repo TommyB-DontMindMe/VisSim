@@ -3,16 +3,16 @@
 #include <QFile>
 #include <fstream>
 #include "ObjMesh.h"
-#include "PointCloud.h"
+// #include "PointCloud.h"
 #include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
 #include "TriangleSurface.h"
 #include "stb_image.h"
+#include "AABB.h"
 
 /*** Renderer class ***/
-Renderer::Renderer(QVulkanWindow *w, bool msaa)
-	: mWindow(w)
+Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
 {
     if (msaa) {
         const QList<int> counts = w->supportedSampleCounts();
@@ -26,7 +26,11 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
         }
     }
 
-    mObjects.push_back(new TriangleSurface(assetPath + "surface.obj"));
+    QVector3D boundsMin{-25,-25,-25};
+    QVector3D boundsMax{ 25, 25, 25};
+
+    mTreeRoot = Octree(AABB(boundsMin, boundsMax), 0);
+    mObjects.push_back(new TriangleSurface(assetPath + "surface.obj", mTriangles));
     mObjects.at(0)->setName("Ground");
 
     mObjects.push_back(new ObjMesh(assetPath + "sphere.obj"));
@@ -41,7 +45,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa)
     mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
 
 
-    // mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", QVector3D(-25,-25,-25), QVector3D(25,25,25)));
+    // mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax));
 
     // **************************************
     // Objects in optional map
@@ -320,7 +324,7 @@ void Renderer::startNextFrame()
     // for (PhysicsObject* p : mPhysicsObjects) {
     //     p->Update(deltaTime);
     // }
-    mSphere->Update(deltaTime, mSurface->mTris);
+    mSphere->Update(deltaTime, mTriangles);
 
     VkCommandBuffer commandBuffer = mWindow->currentCommandBuffer();
 

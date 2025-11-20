@@ -6,6 +6,8 @@
 #include <qelapsedtimer.h>
 #include <unordered_map>
 #include "Camera.h"
+#include "Octree.h"
+#include "Triangle.h"
 #include "VisualObject.h"
 #include "PhysicsObject.h"
 #include "Utilities.h"
@@ -41,6 +43,8 @@ public:
 
     std::vector<VisualObject*>& getObjects() { return mObjects; }
     std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
+
+    Octree mTreeRoot;
 
 protected:
 
@@ -89,6 +93,7 @@ private:
     // Temporary pointers for easy access
     Sphere* mSphere;
     TriangleSurface* mSurface;
+    std::vector<Triangle> mTriangles;
 
     QVector3D mGravity{0.0, -9.8, 0.0};
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container

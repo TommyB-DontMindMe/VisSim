@@ -106,7 +106,8 @@ void MainWindow::openFile() // slot
     auto filnavn = QFileDialog::getOpenFileName(this);
     if (!filnavn.isEmpty())
     {
-        TriangleSurface* surf = new TriangleSurface(filnavn.toStdString());
+        std::vector<Triangle> temp;
+        TriangleSurface* surf = new TriangleSurface(filnavn.toStdString(), temp);
         auto rw = dynamic_cast<Renderer*>(mVulkanWindow->getRenderWindow());
         rw->getObjects().push_back(surf);
         rw->releaseResources();

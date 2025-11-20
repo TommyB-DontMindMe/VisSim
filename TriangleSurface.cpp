@@ -29,12 +29,12 @@ TriangleSurface::TriangleSurface() : VisualObject()
     mMatrix.translate(0.5f, 0.1f, 0.1f);
 }
 
-TriangleSurface::TriangleSurface(const std::string &filename)
+TriangleSurface::TriangleSurface(const std::string &filename, std::vector<Triangle> &oTris)
 {
-    CreateFromObj(filename);
+    CreateFromObj(filename, oTris);
 }
 
-bool TriangleSurface::CreateFromObj(const std::string &filename)
+bool TriangleSurface::CreateFromObj(const std::string &filename, std::vector<Triangle> &oTris)
 {
     qDebug() << "Reading " << filename.c_str();
     std::ifstream fileIn;
@@ -166,7 +166,7 @@ bool TriangleSurface::CreateFromObj(const std::string &filename)
                 }
                 mIndices.push_back(temp_index++);
             }
-            mTris.push_back(Triangle(mVertices[temp_index -3], mVertices[temp_index - 2], mVertices[temp_index - 1]));
+            oTris.push_back(Triangle(mVertices[temp_index -3], mVertices[temp_index - 2], mVertices[temp_index - 1]));
             continue;
         }
     }

@@ -11,11 +11,11 @@ class TriangleSurface : public VisualObject
 {
 public:
     TriangleSurface();
-    TriangleSurface(const std::string& filename);
+    TriangleSurface(const std::string& filename, std::vector<Triangle>& oTris);
 
-    bool CreateFromObj(const std::string& filename);
+    bool CreateFromObj(const std::string& filename, std::vector<Triangle>& oTris);
 
-    std::vector<Triangle> mTris;
+    // std::vector<Triangle> mTris;
 };
 
 #endif // TRIANGLESURFACE_H
