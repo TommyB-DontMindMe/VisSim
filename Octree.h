@@ -3,6 +3,7 @@
 
 #include "AABB.h"
 #include <array>
+class Triangle;
 
 class Octree
 {
@@ -13,11 +14,13 @@ public:
     int mDepth;
     int mMaxDepth;
     int mMaxContent;
-    std::vector<int> mContentIndices;
+    std::vector<int> mContent;
     std::array<std::unique_ptr<Octree>, 8> mChildren;
 
     bool isLeaf() const { return !mChildren[0]; }
     void subdivide();
+    //
+    void insert(std::vector<Triangle>& triangleVector, int index);
 };
 
 #endif // OCTREE_H

@@ -25,3 +25,10 @@ bool AABB::intersectsSphere(const Sphere &sphere)
 
     return distanceSquared <= sphere.mRadius * sphere.mRadius;
 }
+
+bool AABB::intersectsAABB(const AABB &boundingBox)
+{
+    return (mMin.x() <= boundingBox.mMax.x() && mMax.x() <= boundingBox.mMin.x() &&
+            mMin.y() <= boundingBox.mMax.y() && mMax.y() <= boundingBox.mMin.y() &&
+            mMin.z() <= boundingBox.mMax.z() && mMax.z() <= boundingBox.mMin.z());
+}

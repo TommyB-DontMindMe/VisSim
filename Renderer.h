@@ -45,6 +45,7 @@ public:
     std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
 
     Octree mTreeRoot;
+    std::vector<Triangle> mTriangles;   // Stores all triangles in the scene
 
 protected:
 
@@ -93,7 +94,6 @@ private:
     // Temporary pointers for easy access
     Sphere* mSphere;
     TriangleSurface* mSurface;
-    std::vector<Triangle> mTriangles;
 
     QVector3D mGravity{0.0, -9.8, 0.0};
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container

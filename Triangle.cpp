@@ -2,6 +2,7 @@
 #include <QVector3D>
 #include <QVector4D>
 #include "Vertex.h"
+#include "AABB.h"
 
 Triangle::Triangle(Vertex &A, Vertex &B, Vertex &C) : v0(&A), v1(&B), v2(&C)
 {
@@ -14,6 +15,20 @@ QVector3D Triangle::VectorB() const { return v2->pos() - v0->pos(); }
 float Triangle::Distance(const QVector3D &P) const
 {
     return P.distanceToPoint(ClosestPoint(P));
+}
+
+AABB Triangle::Bounds()
+{
+    QVector3D min = QVector3D(
+        std::min({v0->x, v1->x, v2->x}),
+        std::min({v0->y, v1->y, v2->y}),
+        std::min({v0->z, v1->z, v2->z}));
+    QVector3D max = QVector3D(
+        std::max({v0->x, v1->x, v2->x}),
+        std::max({v0->y, v1->y, v2->y}),
+        std::max({v0->z, v1->z, v2->z}));
+
+    return AABB(min, max);
 }
 
 QVector3D Triangle::ProjectPointOnPlane(const QVector3D &P) const

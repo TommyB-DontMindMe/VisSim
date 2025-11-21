@@ -4,6 +4,7 @@
 
 
 class Vertex;
+class AABB;
 
 class Triangle {
 public:
@@ -13,6 +14,7 @@ public:
 
     float Distance(const QVector3D& P) const;
     QVector3D SurfaceNormal() const { return mNormal; };
+    AABB Bounds();
     QVector3D ProjectPointOnPlane(const QVector3D& P) const;
     QVector3D ProjectPointOnEdge(const QVector3D&P, const QVector3D& A, const QVector3D& B) const; // Not really specific to triangles, should probably be moved elsewhere
     QVector3D ClosestPoint(const QVector3D& point) const;

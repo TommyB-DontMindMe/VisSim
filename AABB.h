@@ -19,6 +19,7 @@ public:
 
     bool containsPoint(const QVector3D& point);
     bool intersectsSphere(const Sphere& sphere);
+    bool intersectsAABB(const AABB& boundingBox);
 };
 
 #endif // AABB_H
