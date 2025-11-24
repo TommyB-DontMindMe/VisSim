@@ -3,7 +3,7 @@
 #include <QFile>
 #include <fstream>
 #include "ObjMesh.h"
-// #include "PointCloud.h"
+#include "PointCloud.h"
 #include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
@@ -26,25 +26,25 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         }
     }
 
-    QVector3D boundsMin{-25,-25,-25};
-    QVector3D boundsMax{ 25, 25, 25};
+    QVector3D boundsMin{-5, -5, -5};
+    QVector3D boundsMax{ 5, 5, 5};
 
-    mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);
+    mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);/*
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj", mTriangles));
-    mObjects.at(0)->setName("Ground");
+    mObjects.at(0)->setName("Ground");*/
 
-    mObjects.push_back(new ObjMesh(assetPath + "sphere.obj"));
-    mObjects.at(1)->setPosition(-0.5, 1.2, 0.0);
-    mObjects.at(1)->setName("Sphere");
-
-
-    mSphere = new Sphere();
-    mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
-
-    mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
+    // mObjects.push_back(new ObjMesh(assetPath + "sphere.obj"));
+    // mObjects.at(1)->setPosition(-0.5, 1.2, 0.0);
+    // mObjects.at(1)->setName("Sphere");
 
 
-    // mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax));
+    // mSphere = new Sphere();
+    // mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
+
+    // mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
+
+
+    mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax));
 
     // **************************************
     // Objects in optional map
@@ -53,7 +53,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
 
     //Inital position of the camera
-    mCamera.setPosition(QVector3D(-0.5, -0.5, -8));
+    mCamera.setPosition(QVector3D(-0.0, 0.5, -8));
 
     //Need access to our VulkanWindow so making a convenience pointer
     mVulkanWindow = dynamic_cast<VulkanWindow*>(w);
@@ -265,9 +265,9 @@ void Renderer::initResources()
 
 	//Making a pipeline for drawing lines
 	mColorMaterial.pipeline = mPipeline1;                       // reusing most of the settings from the first pipeline
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;   // draw lines
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;   // draw lines
     rasterization.polygonMode = VK_POLYGON_MODE_FILL;           // VK_POLYGON_MODE_LINE will make a wireframe; VK_POLYGON_MODE_FILL
-    rasterization.lineWidth = 5.0f;
+    rasterization.lineWidth = 1.0f;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pStages = shaderStagesC;
     result = mDeviceFunctions->vkCreateGraphicsPipelines(logicalDevice, mPipelineCache, 1, &pipelineInfo, nullptr, &mColorMaterial.pipeline);
@@ -906,10 +906,10 @@ void Renderer::endTransientCommandBuffer(VkCommandBuffer commandBuffer)
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	//This is the way to submit a command buffer in Vulkan
+    //This is the way to submit a command buffer in Vulkan
     mDeviceFunctions->vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
     mDeviceFunctions->vkQueueWaitIdle(mGraphicsQueue);
-	mDeviceFunctions->vkFreeCommandBuffers(mWindow->device(), mWindow->graphicsCommandPool(), 1, &commandBuffer);
+    mDeviceFunctions->vkFreeCommandBuffers(mWindow->device(), mWindow->graphicsCommandPool(), 1, &commandBuffer);
 }
 
 // Function to destroy a buffer and its memory

@@ -28,7 +28,12 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     float maxX, maxY, maxZ;
     maxX = maxY = maxZ = -std::numeric_limits<float>::infinity();
 
+    {
+        std::string arraySize{};
+        std::getline(fileIn, arraySize);
 
+        qDebug() << "Reading a pointcloud with " << arraySize << " points.";
+    }
     // For Each line read the coordinates and store as a vector3D
     while (std::getline(fileIn, oneLine)) {
         std::stringstream sStream;
