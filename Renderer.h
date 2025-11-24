@@ -44,7 +44,7 @@ public:
     std::vector<VisualObject*>& getObjects() { return mObjects; }
     std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
 
-    Octree mTreeRoot;
+    Octree* mTreeRoot;
     std::vector<Triangle> mTriangles;   // Stores all triangles in the scene
 
 protected:

@@ -6,27 +6,22 @@
 class Vertex;
 class AABB;
 
-class Triangle {
-public:
-    Triangle(Vertex& A, Vertex& B, Vertex& C);
-    QVector3D VectorA() const;
-    QVector3D VectorB() const;
+struct Triangle {
+    Triangle(const QVector3D& A, const QVector3D& B, const QVector3D& C);
+    Triangle(const Vertex& A, const Vertex& B, const Vertex& C);
 
-    float Distance(const QVector3D& P) const;
-    QVector3D SurfaceNormal() const { return mNormal; };
-    AABB Bounds();
-    QVector3D ProjectPointOnPlane(const QVector3D& P) const;
-    QVector3D ProjectPointOnEdge(const QVector3D&P, const QVector3D& A, const QVector3D& B) const; // Not really specific to triangles, should probably be moved elsewhere
-    QVector3D ClosestPoint(const QVector3D& point) const;
-    void Update();
-
-    //std::weak_ptr<Triangle> n0, n1, n2; // Neighbors opposite each Vertex
-
-private:
-    Vertex *v0, *v1, *v2;   // Vertices
-
-    QVector3D mNormal;
-    QVector3D CalculateNormal() const;
+    QVector3D v0, v1, v2;   // Vertices
+    QVector3D normal;
+    float d00, d01, d11, denom;
 };
+
+namespace TriangleHelpers {
+inline void ComputeVariables(Triangle &Tri);
+AABB TriangleBounds(const Triangle& Tri);
+QVector3D ProjectPointOnPlane(const Triangle& Tri, const QVector3D& P);
+QVector3D ProjectPointOnEdge(const QVector3D&P, const QVector3D& A, const QVector3D& B); // Not really specific to triangles, should probably be moved elsewhere
+QVector3D ClosestPoint(const Triangle& Tri, const QVector3D& point);
+
+}
 
 #endif // TRIANGLE_H

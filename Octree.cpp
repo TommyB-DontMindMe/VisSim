@@ -1,7 +1,7 @@
 #include "Octree.h"
 #include "Triangle.h"
 
-Octree::Octree(const AABB &bounds, int depth, int maxDepth, int maxContent) : mBounds(bounds), mDepth(depth), mMaxDepth(maxDepth), mMaxContent(maxContent)
+Octree::Octree(std::vector<Triangle> &contentSource, const AABB &bounds, int depth, int maxDepth, int maxContent) : mContentSource(contentSource), mBounds(bounds), mDepth(depth), mMaxDepth(maxDepth), mMaxContent(maxContent)
 {}
 
 void Octree::subdivide()
@@ -21,21 +21,53 @@ void Octree::subdivide()
         QVector3D childMin = center + offset - halfSize * 0.5f;
         QVector3D childMax = center + offset + halfSize * 0.5f;
 
-        mChildren[i] = std::make_unique<Octree>(AABB(childMin, childMax), mDepth + 1, mMaxDepth, mMaxContent);
+        mChildren[i] = std::make_unique<Octree>(mContentSource, AABB(childMin, childMax), mDepth + 1, mMaxDepth, mMaxContent);
     }
+    // End of Claude generated section
+
+    // Attempt distributing content to children
+    for (int index : mContent)
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            mChildren.at(i)->insert(index);
+        }
+    }
+    mContent.clear();
 }
 
-void Octree::insert(std::vector<Triangle> &triangleVector, int index)
+void Octree::insert(int index)
 {
-    AABB triangleBounds = triangleVector.at(index).Bounds();
+    AABB triangleBounds = mContentSource.at(index).Bounds();
     if (!mBounds.intersectsAABB(triangleBounds)) return; // If the triangle doesn't intersect with the cell just return
 
     // Triangle is likely to intersect with this cell so try adding it we'll ignore edge cases for now
     if (isLeaf())
     {
-        if (mContent.size() < mMaxContent || mDepth >= mMaxDepth) mContent.push_back(index);
-
-        subdivide();
+        if (mContent.size() < mMaxContent || mDepth >= mMaxDepth)
+        {
+            mContent.push_back(index);
+            return;
+        }
+        if (!mChildren[0]) subdivide();
     }
+    for (int i = 0; i < 8; ++i)
+    {
+        mChildren[i]->insert(index);
+    }
+}
 
+void Octree::query(const AABB &iBounds, std::vector<int> &oIndices) const
+{
+    if (!mBounds.intersectsAABB(iBounds)) return;
+
+    // https://cplusplus.com/reference/vector/vector/insert/
+    if (isLeaf()) oIndices.insert(oIndices.end(), mContent.begin(), mContent.end());
+    else
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            if (mChildren[i]->mBounds.intersectsAABB(iBounds)) mChildren[i]->query(iBounds, oIndices);
+        }
+    }
 }

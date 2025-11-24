@@ -29,7 +29,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     QVector3D boundsMin{-25,-25,-25};
     QVector3D boundsMax{ 25, 25, 25};
 
-    mTreeRoot = Octree(AABB(boundsMin, boundsMax), 0);
+    mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj", mTriangles));
     mObjects.at(0)->setName("Ground");
 
@@ -39,7 +39,6 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
 
 
     mSphere = new Sphere(mObjects.at(1));
-    mSphere->mGravity = &mGravity;
     mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
 
     mSurface = static_cast<TriangleSurface*>(mObjects.at(0));
@@ -321,10 +320,6 @@ void Renderer::startNextFrame()
     mVulkanWindow->handleInput();
     mCamera.update();               //input can have moved the camera
 
-    // for (PhysicsObject* p : mPhysicsObjects) {
-    //     p->Update(deltaTime);
-    // }
-    mSphere->Update(deltaTime, mTriangles);
 
     VkCommandBuffer commandBuffer = mWindow->currentCommandBuffer();
 

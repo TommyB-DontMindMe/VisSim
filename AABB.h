@@ -17,9 +17,9 @@ public:
     QVector3D center() const { return (mMin + mMax) * 0.5; }
     QVector3D size() const { return mMax - mMin; }
 
-    bool containsPoint(const QVector3D& point);
-    bool intersectsSphere(const Sphere& sphere);
-    bool intersectsAABB(const AABB& boundingBox);
+    bool containsPoint(const QVector3D& point) const;
+    bool intersectsSphere(const Sphere& sphere) const;
+    bool intersectsAABB(const AABB& boundingBox) const;
 };
 
 #endif // AABB_H

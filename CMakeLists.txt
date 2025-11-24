@@ -23,10 +23,11 @@ qt_add_executable(QtVulkanApp
     HeightMap.h HeightMap.cpp
     ObjMesh.h ObjMesh.cpp
     Sphere.h Sphere.cpp
-    PhysicsObject.h PhysicsObject.cpp
+
     PointCloud.h PointCloud.cpp
     AABB.h AABB.cpp
     Octree.h Octree.cpp
+    PhysicsSystem.h PhysicsSystem.cpp
 )
 # Define the shader files
 set(SHADER_FILES

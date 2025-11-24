@@ -4,41 +4,64 @@
 #include "Vertex.h"
 #include "AABB.h"
 
-Triangle::Triangle(Vertex &A, Vertex &B, Vertex &C) : v0(&A), v1(&B), v2(&C)
+
+
+Triangle::Triangle(const QVector3D &A, const QVector3D &B, const QVector3D &C) : v0(A), v1(B), v2(C)
 {
-    Update();
+    TriangleHelpers::ComputeVariables(*this);
 }
 
-QVector3D Triangle::VectorA() const { return v1->pos() - v0->pos(); }
-QVector3D Triangle::VectorB() const { return v2->pos() - v0->pos(); }
+Triangle::Triangle(const Vertex &A, const Vertex &B, const Vertex &C) : Triangle(A.pos(), B.pos(), C.pos()) {}
 
-float Triangle::Distance(const QVector3D &P) const
+
+
+QVector3D TriangleHelpers::ProjectPointOnPlane(const Triangle &Tri, const QVector3D &P)
 {
-    return P.distanceToPoint(ClosestPoint(P));
+
+    QVector3D AP = P - Tri.v0;
+    float t = QVector3D::dotProduct(AP, Tri.normal);
+    return P - (Tri.normal * t);
 }
 
-AABB Triangle::Bounds()
+AABB TriangleHelpers::TriangleBounds(const Triangle &Tri)
 {
+
     QVector3D min = QVector3D(
-        std::min({v0->x, v1->x, v2->x}),
-        std::min({v0->y, v1->y, v2->y}),
-        std::min({v0->z, v1->z, v2->z}));
+        std::min({Tri.v0.x(), Tri.v1.x(), Tri.v2.x()}),
+        std::min({Tri.v0.y(), Tri.v1.y(), Tri.v2.y()}),
+        std::min({Tri.v0.z(), Tri.v1.z(), Tri.v2.z()}));
     QVector3D max = QVector3D(
-        std::max({v0->x, v1->x, v2->x}),
-        std::max({v0->y, v1->y, v2->y}),
-        std::max({v0->z, v1->z, v2->z}));
+        std::max({Tri.v0.x(), Tri.v1.x(), Tri.v2.x()}),
+        std::max({Tri.v0.y(), Tri.v1.y(), Tri.v2.y()}),
+        std::max({Tri.v0.z(), Tri.v1.z(), Tri.v2.z()}));
 
     return AABB(min, max);
 }
 
-QVector3D Triangle::ProjectPointOnPlane(const QVector3D &P) const
+QVector3D TriangleHelpers::ClosestPoint(const Triangle &Tri, const QVector3D &point)
 {
-    QVector3D AP = P - v0->pos();
-    float t = QVector3D::dotProduct(AP, mNormal) / mNormal.lengthSquared();
-    return P - (mNormal * t);
+    QVector3D P = ProjectPointOnPlane(Tri, point);
+    QVector3D AB = Tri.v1 - Tri.v0, AC = Tri.v2 - Tri.v0, AP = P - Tri.v0;
+
+    // from Real Time Collision Detection (Ericson, 2005, p.47-48)
+    float d20 = QVector3D::dotProduct(AP, AB);
+    float d21 = QVector3D::dotProduct(AP, AC);
+
+    float v = (Tri.d11 * d20 - Tri.d01 * d21) / Tri.denom;
+    float w = (Tri.d00 * d21 - Tri.d01 * d20) / Tri.denom;
+    float u = 1.0f - v - w;
+
+    // If the projected point is inside the triangle then it will be the closes point
+    if (v >= 0 && w >= 0 && u >= 0) return P;
+    // The closest point lies on AC
+    if (v < 0) return ProjectPointOnEdge(P, Tri.v0, Tri.v2);
+    // The closest point lies on AB
+    if (w < 0) return ProjectPointOnEdge(P, Tri.v0, Tri.v1);
+    // The closest point lies on BC
+    return ProjectPointOnEdge(P, Tri.v1, Tri.v2);
 }
 
-QVector3D Triangle::ProjectPointOnEdge(const QVector3D &P, const QVector3D &A, const QVector3D &B) const
+QVector3D TriangleHelpers::ProjectPointOnEdge(const QVector3D &P, const QVector3D &A, const QVector3D &B)
 {
     QVector3D AB = B - A;
     QVector3D AP = P - A;
@@ -47,40 +70,14 @@ QVector3D Triangle::ProjectPointOnEdge(const QVector3D &P, const QVector3D &A, c
     return A + AB * t;
 }
 
-QVector3D Triangle::ClosestPoint(const QVector3D &point) const
+void TriangleHelpers::ComputeVariables(Triangle &Tri)
 {
-    QVector3D P = ProjectPointOnPlane(point);
-    QVector3D AB = VectorA(), AC = VectorB(), AP = P - v0->pos();
+    QVector3D AB = Tri.v1 - Tri.v0;
+    QVector3D AC = Tri.v2 - Tri.v0;
+    Tri.normal = QVector3D::crossProduct(AB, AC).normalized();
 
-    // from Real Time Collision Detection (Ericson, 2005, p.47-48)
-    float d00 = QVector3D::dotProduct(AB, AB);  //
-    float d01 = QVector3D::dotProduct(AB, AC);  // These could be calculated in the update function and cached for this function
-    float d11 = QVector3D::dotProduct(AC, AC);  //
-    float d20 = QVector3D::dotProduct(AP, AB);
-    float d21 = QVector3D::dotProduct(AP, AC);
-    float denom = d00 * d11 - d01 * d01;        // This one too
-    float v = (d11 * d20 - d01 * d21) / denom;
-    float w = (d00 * d21 - d01 * d20) / denom;
-    float u = 1.0f - v - w;
-
-    // If the projected point is inside the triangle then it will be the closes point
-    if (v >= 0 && w >= 0 && u >= 0) return P;
-    // The closest point lies on AC
-    if (v < 0) return ProjectPointOnEdge(P, v0->pos(), v2->pos());
-    // The closest point lies on AB
-    if (w < 0) return ProjectPointOnEdge(P, v0->pos(), v1->pos());
-    // The closest point lies on BC
-    return ProjectPointOnEdge(P, v1->pos(), v2->pos());
-
-}
-
-QVector3D Triangle::CalculateNormal() const
-{
-    return QVector3D::crossProduct(VectorA(), VectorB());
-}
-
-
-void Triangle::Update()
-{
-    mNormal = CalculateNormal();
+    Tri.d00 = QVector3D::dotProduct(AB, AB);
+    Tri.d01 = QVector3D::dotProduct(AB, AC);
+    Tri.d11 = QVector3D::dotProduct(AC, AC);
+    Tri.denom = Tri.d00 * Tri.d11 - Tri.d01 * Tri.d01;
 }

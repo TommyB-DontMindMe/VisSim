@@ -1,7 +1,6 @@
 #include "Sphere.h"
 #include "Triangle.h"
 
-Sphere::Sphere(VisualObject *v) : mVisual(v) {}
 
 void Sphere::Update(float deltaTime)
 {
