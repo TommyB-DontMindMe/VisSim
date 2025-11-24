@@ -9,7 +9,6 @@
 #include "Octree.h"
 #include "Triangle.h"
 #include "VisualObject.h"
-#include "PhysicsObject.h"
 #include "Utilities.h"
 class Sphere;
 class TriangleSurface;
@@ -89,7 +88,6 @@ private:
     QElapsedTimer mTimer;
     float deltaTime{0.0f};
     std::vector<VisualObject*> mObjects;    //All objects in the program
-    std::vector<PhysicsObject*> mPhysicsObjects;
 
     // Temporary pointers for easy access
     Sphere* mSphere;

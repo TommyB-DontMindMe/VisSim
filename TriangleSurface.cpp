@@ -1,4 +1,5 @@
 #include "TriangleSurface.h"
+#include "Triangle.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>

@@ -1,6 +1,7 @@
 #include "PhysicsSystem.h"
 #include "Octree.h"
 #include "Sphere.h"
+#include "Triangle.h"
 
 PhysicsSystem::PhysicsSystem() {}
 

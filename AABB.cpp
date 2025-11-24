@@ -2,14 +2,14 @@
 #include "Sphere.h"
 
 
-bool AABB::containsPoint(const QVector3D &point)
+bool AABB::containsPoint(const QVector3D &point) const
 {
     return (point.x() >= mMin.x() && point.x() <= mMax.x() &&
             point.y() >= mMin.y() && point.y() <= mMax.y() &&
             point.z() >= mMin.z() && point.z() <= mMax.z());
 }
 
-bool AABB::intersectsSphere(const Sphere &sphere)
+bool AABB::intersectsSphere(const Sphere &sphere) const
 {
     float distanceSquared = 0.0f;
 
@@ -26,7 +26,7 @@ bool AABB::intersectsSphere(const Sphere &sphere)
     return distanceSquared <= sphere.mRadius * sphere.mRadius;
 }
 
-bool AABB::intersectsAABB(const AABB &boundingBox)
+bool AABB::intersectsAABB(const AABB &boundingBox) const
 {
     return (mMin.x() <= boundingBox.mMax.x() && mMax.x() <= boundingBox.mMin.x() &&
             mMin.y() <= boundingBox.mMax.y() && mMax.y() <= boundingBox.mMin.y() &&

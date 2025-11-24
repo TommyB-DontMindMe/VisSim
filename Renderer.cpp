@@ -38,7 +38,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     mObjects.at(1)->setName("Sphere");
 
 
-    mSphere = new Sphere(mObjects.at(1));
+    mSphere = new Sphere();
     mSphere->mPosition = QVector3D(-0.5, 1.2, 0.0);
 
     mSurface = static_cast<TriangleSurface*>(mObjects.at(0));

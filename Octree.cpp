@@ -38,7 +38,7 @@ void Octree::subdivide()
 
 void Octree::insert(int index)
 {
-    AABB triangleBounds = mContentSource.at(index).Bounds();
+    AABB triangleBounds = TriangleHelpers::TriangleBounds(mContentSource.at(index));
     if (!mBounds.intersectsAABB(triangleBounds)) return; // If the triangle doesn't intersect with the cell just return
 
     // Triangle is likely to intersect with this cell so try adding it we'll ignore edge cases for now

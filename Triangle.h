@@ -2,13 +2,13 @@
 #define TRIANGLE_H
 #include <qvectornd.h>
 
-
-class Vertex;
+#include "Vertex.h" // Forward declaring this causes compiler issues
+//class Vertex;
 class AABB;
 
 struct Triangle {
     Triangle(const QVector3D& A, const QVector3D& B, const QVector3D& C);
-    Triangle(const Vertex& A, const Vertex& B, const Vertex& C);
+    Triangle(const Vertex& A, const Vertex& B, const Vertex& C); // Specifically because the compiler seems to want to inline this
 
     QVector3D v0, v1, v2;   // Vertices
     QVector3D normal;
@@ -16,7 +16,7 @@ struct Triangle {
 };
 
 namespace TriangleHelpers {
-inline void ComputeVariables(Triangle &Tri);
+void ComputeVariables(Triangle &Tri);
 AABB TriangleBounds(const Triangle& Tri);
 QVector3D ProjectPointOnPlane(const Triangle& Tri, const QVector3D& P);
 QVector3D ProjectPointOnEdge(const QVector3D&P, const QVector3D& A, const QVector3D& B); // Not really specific to triangles, should probably be moved elsewhere
