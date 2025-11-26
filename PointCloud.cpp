@@ -7,6 +7,7 @@
 
 PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const QVector3D &max)
 {
+    QVector3D targetSpan = max - min;
     drawType = 1;
     // Open file
 
@@ -66,14 +67,40 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     // Determine the expanse of each dimension
     QVector3D spanMin(minX, minY, minZ);
     QVector3D spanMax(maxX, maxY, maxZ);
-    float factorX = std::abs(max.x() - min.x()) / std::abs(maxX - minX);
-    float factorY = std::abs(max.y() - min.y()) / std::abs(maxY - minY);
-    float factorZ = std::abs(max.z() - min.z()) / std::abs(maxZ - minZ);
+    QVector3D currentSpan = spanMax - spanMin;
 
-    for (QVector3D p : tempPoints) {
+    QVector3D factor = targetSpan / currentSpan;
+
+    for (const QVector3D& p : tempPoints) {
         QVector3D relP = p - spanMin;
 
-        Vertex adjustedP(relP.x() * factorX, relP.y() * factorY, relP.z() * factorZ, factorX, factorY, factorZ, factorX, factorZ);
+        Vertex adjustedP(relP * factor, factor, QVector2D(factor.x(), factor.z()));
         mVertices.push_back(adjustedP);
     }
+}
+
+// Based on https://github.com/delfrrr/delaunator-cpp
+QVector2D PointCloud::Circumcenter(const QVector2D &A, const QVector2D &B, const QVector2D &C)
+{
+    const QVector2D D{B - A};
+    const QVector2D E{C - A};
+
+    const double b1 = QVector2D::dotProduct(D, D);
+    const double c1 = QVector2D::dotProduct(E, E);
+    const double d = 2 * (D.x() * E.y() - D.y() * E.x()); // QVector2D has no crossProduct function
+
+    const QVector2D num(E.y() * b1 - D.y() * c1, D.x() * c1 - E.x() * b1);
+    return A + num / d;
+}
+
+bool DelaunayTriangle::operator==(const DelaunayTriangle &other) const
+{
+    return (v0 == other.v0 && v1 == other.v1 && v2 == other.v2) ||
+           (v0 == other.v1 && v1 == other.v2 && v2 == other.v0) ||
+           (v0 == other.v2 && v1 == other.v0 && v2 == other.v1);
+}
+
+bool Edge::operator==(const Edge &other) const
+{
+    return (v0 == other.v0 && v1 == other.v1);
 }
