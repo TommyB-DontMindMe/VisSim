@@ -80,7 +80,7 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     const QVector2D superA(min.x(), min.z());
     const QVector2D superB(min.x(), min.z() + 2 * targetSpan.z());
     const QVector2D superC(min.x() + 2 * targetSpan.x(), min.z());
-    Delaunay::DelaunayTriangle superTri(-2, -1, -3); // I need to iterate over this as well, but I'd like to keep its indices distinct so it'll be easier to remove the "scaffolding" later
+    Delaunay::Triangle superTri(-2, -1, -3); // I need to iterate over this as well, but I'd like to keep its indices distinct so it'll be easier to remove the "scaffolding" later
     superTri.circumCenter = Delaunay::Circumcenter(superA, superB, superB);
     superTri.circumRadius = superA.distanceToPoint(superTri.circumCenter);
     auto superIndex = [&](int index) -> QVector2D
@@ -98,57 +98,88 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
         }
     };
 
-    std::vector<Delaunay::DelaunayTriangle> tempTris{superTri};
+    std::vector<Delaunay::Triangle> tempTris{superTri};
 
-    // Add the point, if it lies within a triangle: remove that triangle and form new triangles between the point and the former triangle vertices
+    // Add the point
     for (int i = 0; i < mVertices.size(); ++i)
     {
         QVector2D point(mVertices[i].poXZ());
+        std::vector<Delaunay::Triangle> invalidatedTris;
+        std::vector<Delaunay::Edge> polygonEdges;
+
+        // If the point lies within the circumcircle of a triangle remove the triangle
+        for (const Delaunay::Triangle& tri : tempTris)
+        {
+            if (point.distanceToPoint(tri.circumCenter) <= tri.circumRadius)
+                invalidatedTris.push_back(tri);
+        }
+        // Find the edges of the abscense left by the triangles removed
+        for (const Delaunay::Triangle& tri : invalidatedTris)
+        {
+            std::vector<Delaunay::Edge> triEdges = {
+                Delaunay::Edge(tri.v0, tri.v1),
+                Delaunay::Edge(tri.v1, tri.v2),
+                Delaunay::Edge(tri.v2, tri.v0)
+            };
+            // We can ignore all edges between removed triangles
+            for (const Delaunay::Edge& edge : triEdges)
+            {
+                bool isShared{ false };
+                for (const Delaunay::Triangle& otherTri : invalidatedTris)
+                {
+                    if (&tri == &otherTri) continue;
+                    if ((otherTri.v0 == edge.v1 && otherTri.v1 == edge.v0) ||
+                        (otherTri.v1 == edge.v1 && otherTri.v2 == edge.v0) ||
+                        (otherTri.v2 == edge.v1 && otherTri.v0 == edge.v0))
+                    {
+                        isShared = true;
+                        break;
+                    }
+                }
+
+                if (!isShared)
+                    polygonEdges.push_back(edge);
+            }
+        }
+
+        // Remove all invalidated Triangles
         for (auto tri = tempTris.begin(); tri != tempTris.end();)
         {
-            if (point.distanceToPoint(tri->circumCenter) <= tri->circumRadius)
+            bool isInvalid{ false };
+            for (const Delaunay::Triangle& badTri : invalidatedTris)
             {
-                // Create new triangles
-                Delaunay::DelaunayTriangle newA(tri->v1, tri->v0, i);
-                newA.circumCenter = Delaunay::Circumcenter(superIndex(newA.v0), superIndex(newA.v1), superIndex(newA.v2));
-                newA.circumRadius = superIndex(newA.v0).distanceToPoint(newA.circumCenter);
-
-                Delaunay::DelaunayTriangle newB(tri->v0, tri->v2, i);
-                newB.circumCenter = Delaunay::Circumcenter(superIndex(newB.v0), superIndex(newB.v1), superIndex(newB.v2));
-                newB.circumRadius = superIndex(newB.v0).distanceToPoint(newB.circumCenter);
-
-                Delaunay::DelaunayTriangle newC(tri->v2, tri->v1, i);
-                newC.circumCenter = Delaunay::Circumcenter(superIndex(newC.v0), superIndex(newC.v1), superIndex(newC.v2));
-                newC.circumRadius = superIndex(newC.v0).distanceToPoint(newC.circumCenter);
-
-                // Remove the invalid triangle and insert the new ones
-                tri = tempTris.erase(tri);
-
-                tri = tempTris.insert(tri, newA);
-                tri = tempTris.insert(tri, newB);
-                tri = tempTris.insert(tri, newC);
-
-                // The new triangles should be fine in regards to this point so we can skip them here
-                tri += 3;
+                if (*tri == badTri)
+                {
+                    isInvalid = true;
+                    break;
+                }
             }
-            else ++tri;
-        }
-    }
 
-    // Remove all triangles that share a point with the super triangle
-    for (auto tri = tempTris.begin(); tri != tempTris.end();)
-    {
-        if (tri->v0 < 0 || tri->v1 < 0 || tri->v2 < 0)
-            tri = tempTris.erase(tri);
-        else
+            if (isInvalid)
+                tri = tempTris.erase(tri);
+            else
+                ++tri;
+        }
+
+        // Create new triangles from the exposed edges
+        for (const Delaunay::Edge& edge : polygonEdges)
         {
-            mIndices.push_back(tri->v0);
-            mIndices.push_back(tri->v1);
-            mIndices.push_back(tri->v2);
-            ++tri;
+            Delaunay::Triangle newTri(edge.v0, edge.v1, i);
+            newTri.circumCenter = Delaunay::Circumcenter(superIndex(newTri.v0), superIndex(newTri.v1), superIndex(newTri.v2));
+            newTri.circumRadius = superIndex(newTri.v0).distanceToPoint(newTri.circumCenter);
+            tempTris.push_back(newTri);
         }
     }
 
+    // Store the indices of all remaining triangles, ignore those who are connected to the superTriangle
+    for (const Delaunay::Triangle& tri : tempTris)
+    {
+        if (tri.v0 < 0 || tri.v1 < 0 || tri.v2 < 0) continue;
+
+        mIndices.push_back(tri.v0);
+        mIndices.push_back(tri.v1);
+        mIndices.push_back(tri.v2);
+    }
     // I'll be using Vertex rgb to store normals
     // For every vertex in each triangle rgb == 0 ? rgb = triangle.normal : rgb = (rgb + triangle.normal) / 2;
 }
