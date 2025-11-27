@@ -15,20 +15,24 @@ public:
 // Should probably be moved to it's own file but it can live here for now
 struct DelaunayTriangle
 {
-    int v0, v1, v2;
-    QVector3D circumCenter;
+    QVector2D v0, v1, v2;
+    QVector2D circumCenter;
     float circumRadius{0};
 
-    DelaunayTriangle(int a, int b, int c) : v0(a), v1(b), v2(c) {}
+    DelaunayTriangle(const QVector2D& a, const QVector2D& b, const QVector2D& c) : v0(a), v1(b), v2(c) {}
 
-    bool operator==(const DelaunayTriangle& other) const;
+    bool operator==(const DelaunayTriangle& other) const {
+        return (v0 == other.v0 && v1 == other.v1 && v2 == other.v2) ||
+               (v0 == other.v1 && v1 == other.v2 && v2 == other.v0) ||
+               (v0 == other.v2 && v1 == other.v0 && v2 == other.v1);
+    }
 };
 struct Edge
 {
     int v0, v1;
     Edge(int a, int b) : v0(std::min(a, b)), v1(std::max(a, b)) {}
 
-    bool operator==(const Edge& other) const;
+    bool operator==(const Edge& other) const { return (v0 == other.v0 && v1 == other.v1); }
 };
 
 #endif // POINTCLOUD_H

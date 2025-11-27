@@ -74,9 +74,24 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     for (const QVector3D& p : tempPoints) {
         QVector3D relP = p - spanMin;
 
-        Vertex adjustedP(relP * factor, factor, QVector2D(factor.x(), factor.z()));
+        Vertex adjustedP(relP * factor, QVector3D(0, 0, 0), QVector2D(factor.x(), factor.z()));
         mVertices.push_back(adjustedP);
     }
+    // Create a super triangle that encompasses all points
+    // Point A = min, b = A.x() + targetSpan.x() * 2, c = A.z() + targetSpan.z() * 2
+    QVector2D superA(min.x(), min.z());
+    QVector2D superB(min.x() + 2 * targetSpan.x(), min.z());
+    QVector2D superC(min.x(), min.z() + 2 * targetSpan.z());
+    DelaunayTriangle super(superA, superB, superC);
+
+    // Add the point, if it lies within a triangle: remove that triangle and form new triangles between the point and the former triangle vertices
+
+    // Remove all triangles that share a point with the super triangle
+
+    // For every remaining triangle insert indices, making sure they go counter-clockwise seen from above to ensure proper face normals
+
+    // I'll be using Vertex rgb to store normals
+    // For every vertex in each triangle rgb == 0 ? rgb = triangle.normal : rgb = (rgb + triangle.normal) / 2;
 }
 
 // Based on https://github.com/delfrrr/delaunator-cpp
@@ -89,18 +104,8 @@ QVector2D PointCloud::Circumcenter(const QVector2D &A, const QVector2D &B, const
     const double c1 = QVector2D::dotProduct(E, E);
     const double d = 2 * (D.x() * E.y() - D.y() * E.x()); // QVector2D has no crossProduct function
 
+    if (std::abs(d) < 1e-9) return (A + B + C) / 3; // Points are collinear, return the average position
+
     const QVector2D num(E.y() * b1 - D.y() * c1, D.x() * c1 - E.x() * b1);
     return A + num / d;
-}
-
-bool DelaunayTriangle::operator==(const DelaunayTriangle &other) const
-{
-    return (v0 == other.v0 && v1 == other.v1 && v2 == other.v2) ||
-           (v0 == other.v1 && v1 == other.v2 && v2 == other.v0) ||
-           (v0 == other.v2 && v1 == other.v0 && v2 == other.v1);
-}
-
-bool Edge::operator==(const Edge &other) const
-{
-    return (v0 == other.v0 && v1 == other.v1);
 }
