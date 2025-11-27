@@ -7,10 +7,8 @@
 
 PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const QVector3D &max)
 {
-    QVector3D targetSpan = max - min;
-    drawType = 1;
-    // Open file
 
+    // Open file
     std::ifstream fileIn;
     fileIn.open(filename, std::ifstream::in);
     if (!fileIn) {
@@ -64,6 +62,7 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
         continue;
     }
 
+    QVector3D targetSpan = max - min;
     // Determine the expanse of each dimension
     QVector3D spanMin(minX, minY, minZ);
     QVector3D spanMax(maxX, maxY, maxZ);
@@ -78,24 +77,84 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
         mVertices.push_back(adjustedP);
     }
     // Create a super triangle that encompasses all points
-    // Point A = min, b = A.x() + targetSpan.x() * 2, c = A.z() + targetSpan.z() * 2
-    QVector2D superA(min.x(), min.z());
-    QVector2D superB(min.x() + 2 * targetSpan.x(), min.z());
-    QVector2D superC(min.x(), min.z() + 2 * targetSpan.z());
-    DelaunayTriangle super(superA, superB, superC);
+    const QVector2D superA(min.x(), min.z());
+    const QVector2D superB(min.x(), min.z() + 2 * targetSpan.z());
+    const QVector2D superC(min.x() + 2 * targetSpan.x(), min.z());
+    Delaunay::DelaunayTriangle superTri(-2, -1, -3); // I need to iterate over this as well, but I'd like to keep its indices distinct so it'll be easier to remove the "scaffolding" later
+    superTri.circumCenter = Delaunay::Circumcenter(superA, superB, superB);
+    superTri.circumRadius = superA.distanceToPoint(superTri.circumCenter);
+    auto superIndex = [&](int index) -> QVector2D
+    {
+        switch (index) {
+        case -1:
+            return superA;
+        case -2:
+            return superB;
+        case -3:
+            return superC;
+        default:
+            if (index >= 0) return mVertices[index].poXZ();
+            throw std::out_of_range("");
+        }
+    };
+
+    std::vector<Delaunay::DelaunayTriangle> tempTris{superTri};
 
     // Add the point, if it lies within a triangle: remove that triangle and form new triangles between the point and the former triangle vertices
+    for (int i = 0; i < mVertices.size(); ++i)
+    {
+        QVector2D point(mVertices[i].poXZ());
+        for (auto tri = tempTris.begin(); tri != tempTris.end();)
+        {
+            if (point.distanceToPoint(tri->circumCenter) <= tri->circumRadius)
+            {
+                // Create new triangles
+                Delaunay::DelaunayTriangle newA(tri->v1, tri->v0, i);
+                newA.circumCenter = Delaunay::Circumcenter(superIndex(newA.v0), superIndex(newA.v1), superIndex(newA.v2));
+                newA.circumRadius = superIndex(newA.v0).distanceToPoint(newA.circumCenter);
+
+                Delaunay::DelaunayTriangle newB(tri->v0, tri->v2, i);
+                newB.circumCenter = Delaunay::Circumcenter(superIndex(newB.v0), superIndex(newB.v1), superIndex(newB.v2));
+                newB.circumRadius = superIndex(newB.v0).distanceToPoint(newB.circumCenter);
+
+                Delaunay::DelaunayTriangle newC(tri->v2, tri->v1, i);
+                newC.circumCenter = Delaunay::Circumcenter(superIndex(newC.v0), superIndex(newC.v1), superIndex(newC.v2));
+                newC.circumRadius = superIndex(newC.v0).distanceToPoint(newC.circumCenter);
+
+                // Remove the invalid triangle and insert the new ones
+                tri = tempTris.erase(tri);
+
+                tri = tempTris.insert(tri, newA);
+                tri = tempTris.insert(tri, newB);
+                tri = tempTris.insert(tri, newC);
+
+                // The new triangles should be fine in regards to this point so we can skip them here
+                tri += 3;
+            }
+            else ++tri;
+        }
+    }
 
     // Remove all triangles that share a point with the super triangle
-
-    // For every remaining triangle insert indices, making sure they go counter-clockwise seen from above to ensure proper face normals
+    for (auto tri = tempTris.begin(); tri != tempTris.end();)
+    {
+        if (tri->v0 < 0 || tri->v1 < 0 || tri->v2 < 0)
+            tri = tempTris.erase(tri);
+        else
+        {
+            mIndices.push_back(tri->v0);
+            mIndices.push_back(tri->v1);
+            mIndices.push_back(tri->v2);
+            ++tri;
+        }
+    }
 
     // I'll be using Vertex rgb to store normals
     // For every vertex in each triangle rgb == 0 ? rgb = triangle.normal : rgb = (rgb + triangle.normal) / 2;
 }
 
 // Based on https://github.com/delfrrr/delaunator-cpp
-QVector2D PointCloud::Circumcenter(const QVector2D &A, const QVector2D &B, const QVector2D &C)
+QVector2D Delaunay::Circumcenter(const QVector2D &A, const QVector2D &B, const QVector2D &C)
 {
     const QVector2D D{B - A};
     const QVector2D E{C - A};

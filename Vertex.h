@@ -30,6 +30,7 @@ struct  Vertex {
     friend std::istream& operator>> (std::istream&, Vertex&);
 
     QVector3D pos() const { return QVector3D(x, y, z); }
+    QVector2D poXZ() const { return QVector2D(x, z); }
 };
 
 #endif // VERTEX_H
