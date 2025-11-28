@@ -2,12 +2,9 @@
 #include <QVulkanFunctions>
 #include <QFile>
 #include <fstream>
-#include "ObjMesh.h"
 #include "PointCloud.h"
-#include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
-#include "TriangleSurface.h"
 #include "stb_image.h"
 #include "AABB.h"
 
@@ -26,8 +23,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         }
     }
 
-    QVector3D boundsMin{-5, -5, -5};
-    QVector3D boundsMax{ 5, 5, 5};
+    QVector3D boundsMin{-5, -10, -5};
+    QVector3D boundsMax{ 5, 0, 5};
 
     mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);/*
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj", mTriangles));
