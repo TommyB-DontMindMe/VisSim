@@ -16,13 +16,11 @@ layout(set = 0, binding = 0) uniform cam {
 
 out gl_PerVertex {
     vec4 gl_Position;
-    float gl_PointSize;
 };
 
 void main()
 {
     vColor = color;
     gl_Position =   camera.projection * camera.view * model.model * vec4(position, 1.0);
-    gl_PointSize = 5.0;
 }
 

@@ -23,8 +23,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         }
     }
 
-    QVector3D boundsMin{-5, -10, -5};
-    QVector3D boundsMax{ 5, 0, 5};
+    QVector3D boundsMin{ 0, 0, 0};
+    QVector3D boundsMax{ 5, 4, 5};
 
     mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);/*
     mObjects.push_back(new TriangleSurface(assetPath + "surface.obj", mTriangles));
@@ -262,7 +262,7 @@ void Renderer::initResources()
 
 	//Making a pipeline for drawing lines
 	mColorMaterial.pipeline = mPipeline1;                       // reusing most of the settings from the first pipeline
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;   // draw lines
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;   // draw lines
     rasterization.polygonMode = VK_POLYGON_MODE_FILL;           // VK_POLYGON_MODE_LINE will make a wireframe; VK_POLYGON_MODE_FILL
     rasterization.lineWidth = 1.0f;
     pipelineInfo.pInputAssemblyState = &inputAssembly;

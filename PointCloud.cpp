@@ -7,7 +7,7 @@
 
 PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const QVector3D &max)
 {
-
+    drawType = 1;
     // Open file
     std::ifstream fileIn;
     fileIn.open(filename, std::ifstream::in);
@@ -40,7 +40,7 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
         sStream << oneLine;
         //Streaming one word out of line
         oneWord = ""; //resetting the value or else the last value might survive!
-        sStream >> oneWord;
+        //sStream >> oneWord;
 
         QVector3D tempVertex;
         sStream >> oneWord;
@@ -176,9 +176,16 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     {
         if (tri.v0 < 0 || tri.v1 < 0 || tri.v2 < 0) continue;
 
+        // mIndices.push_back(tri.v0);
+        // mIndices.push_back(tri.v1);
+        // mIndices.push_back(tri.v2);
+
         mIndices.push_back(tri.v0);
         mIndices.push_back(tri.v1);
+        mIndices.push_back(tri.v1);
         mIndices.push_back(tri.v2);
+        mIndices.push_back(tri.v2);
+        mIndices.push_back(tri.v0);
     }
     // I'll be using Vertex rgb to store normals
     // For every vertex in each triangle rgb == 0 ? rgb = triangle.normal : rgb = (rgb + triangle.normal) / 2;
