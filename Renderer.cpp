@@ -7,6 +7,7 @@
 #include "Triangle.h"
 #include "stb_image.h"
 #include "AABB.h"
+#include "WorldAxis.h"
 #include "Light.h"
 
 /*** Renderer class ***/
@@ -30,6 +31,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     QVector3D boundsMax{ 5, 4, 5};
 
     //Since the light is a special object we have only one of
+    mLight = new Light();
     mLight->setPosition(QVector3D(2.5, 8.0, 2.5));
     mLight->setColor({0.88, 0.7, 0.9});
 

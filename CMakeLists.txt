@@ -29,6 +29,7 @@ qt_add_executable(QtVulkanApp
     AABB.h AABB.cpp
     Octree.h Octree.cpp
     PhysicsSystem.h PhysicsSystem.cpp
+    Light.h Light.cpp
 )
 # Define the shader files
 set(SHADER_FILES
