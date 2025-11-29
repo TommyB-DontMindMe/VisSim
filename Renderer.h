@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Octree.h"
 #include "Triangle.h"
+#include "TriangleSurface.h"
 #include "VisualObject.h"
 #include "Utilities.h"
 class Sphere;
@@ -51,9 +52,9 @@ protected:
     //Creates the Vulkan shader module from the precompiled shader files in .spv format
     VkShaderModule createShader(const QString &name);
 
-	void setModelMatrix(QMatrix4x4 modelMatrix);
+	void setModelMatrix(QMatrix4x4 modelMatrix, QVector3D color);
     void setViewProjectionMatrix();
-	void setTexture(TextureHandle& textureHandle, VkCommandBuffer commandBuffer);
+    void setTexture(TextureHandle& textureHandle, VkCommandBuffer commandBuffer);
 
 	void setRenderPassParameters(VkCommandBuffer commandBuffer);
 
@@ -75,11 +76,18 @@ protected:
     VkDescriptorPool mTextureDescriptorPool{ VK_NULL_HANDLE };
     VkDescriptorSetLayout mTextureDescriptorSetLayout{ VK_NULL_HANDLE };
 	VkSampler mTextureSampler{ VK_NULL_HANDLE };
+    VkDeviceMemory mBufferMemory{ VK_NULL_HANDLE };
+    VkBuffer mBuffer{ VK_NULL_HANDLE };
+ 
+    // VkDescriptorPool mDescriptorPool{ VK_NULL_HANDLE };
+    // VkDescriptorSetLayout mDescriptorSetLayout{ VK_NULL_HANDLE };
+	//Only need one descriptor set for now:
+    //VkDescriptorSet mDescriptorSet{ VK_NULL_HANDLE }; // [QVulkanWindow::MAX_CONCURRENT_FRAME_COUNT] { VK_NULL_HANDLE };
 
-    //From Obj branch:
     VkPipelineCache mPipelineCache{ VK_NULL_HANDLE };
-    VkPipelineLayout mPipelineLayout{ VK_NULL_HANDLE };
-    VkPipeline mPipeline1{ VK_NULL_HANDLE };
+    //VkPipelineLayout mPipelineLayout{ VK_NULL_HANDLE };
+    //VkPipeline mPipeline1{ VK_NULL_HANDLE };
+    VkPipeline mPipeline2{ VK_NULL_HANDLE };
 
     VkQueue mGraphicsQueue{ VK_NULL_HANDLE };
 
@@ -94,16 +102,20 @@ private:
     TriangleSurface* mSurface;
 
     QVector3D mGravity{0.0, -9.8, 0.0};
+
     std::unordered_map<std::string, VisualObject*> mMap;    // alternativ container
 
+    void createBuffer(VkDevice logicalDevice,
+                      const VkDeviceSize uniAlign, VisualObject* visualObject,
+                      VkBufferUsageFlags usage=VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
 	//Start of Uniforms and DescriptorSets
-    BufferHandle createGeneralBuffer(const VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 	void createVertexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject);
 	void createIndexBuffer(const VkDeviceSize uniformAlignment, VisualObject* visualObject);
-    void createUniformBuffer();
     void createDescriptorSetLayouts();
+    void createUniformBuffer();
 	void createDescriptorSet();
-	void createDescriptorPools();
+	void createDescriptorPool();
     void destroyBuffer(BufferHandle handle);
 
 	void createTextureSampler();
@@ -121,22 +133,48 @@ private:
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags requiredProperties);
 
+	BufferHandle createGeneralBuffer(const VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+
     Camera mCamera;
     class VulkanWindow* mVulkanWindow{ nullptr };
 
-	VkCommandBuffer beginTransientCommandBuffer();
-	void endTransientCommandBuffer(VkCommandBuffer commandBuffer);
+	VkCommandBuffer BeginTransientCommandBuffer();
+	void EndTransientCommandBuffer(VkCommandBuffer commandBuffer);
 
     BufferHandle mUniformBuffer{};
-	void* mUniformBufferLocation{ nullptr };
+    uint8_t* mUniformBufferLocation{ nullptr };
 
-    // Color shader material / shader
+    class Light* mLight{nullptr};
+
+    // Line Color shader
     struct {
         VkShaderModule vertShaderModule;
         VkShaderModule fragShaderModule;
-		//VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };    //also should have had a spesific pipeline layout
+        VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
         VkPipeline pipeline{ VK_NULL_HANDLE };
+    } mLineMaterial;
+
+    // Color shader
+    struct {
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
+        VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
+        VkPipeline pipeline{VK_NULL_HANDLE};
     } mColorMaterial;
+
+    // Phong shader
+    struct {
+        VkDeviceSize vertUniSize;
+        VkDeviceSize fragUniSize;
+        // VkDeviceSize uniMemStartOffset;
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
+        VkDescriptorPool descriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSetLayout descriptorSetLayout{VK_NULL_HANDLE};
+        VkDescriptorSet descriptorSet;
+        VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
+        VkPipeline pipeline{VK_NULL_HANDLE};
+    } mPhongMaterial;
 };
 
 #endif // RENDERER_H

@@ -1,13 +1,14 @@
 #include "PointCloud.h"
+#include "Triangle.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <limits>
 
 
-PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const QVector3D &max)
+PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const QVector3D &max, std::vector<Triangle>& oTriangles)
 {
-    drawType = 1;
+    drawType = 2;
     // Open file
     std::ifstream fileIn;
     fileIn.open(filename, std::ifstream::in);
@@ -176,19 +177,35 @@ PointCloud::PointCloud(const std::string &filename, const QVector3D &min, const 
     {
         if (tri.v0 < 0 || tri.v1 < 0 || tri.v2 < 0) continue;
 
-        // mIndices.push_back(tri.v0);
-        // mIndices.push_back(tri.v1);
-        // mIndices.push_back(tri.v2);
+        mIndices.push_back(tri.v0);
+        mIndices.push_back(tri.v1);
+        mIndices.push_back(tri.v2);
 
-        mIndices.push_back(tri.v0);
-        mIndices.push_back(tri.v1);
-        mIndices.push_back(tri.v1);
-        mIndices.push_back(tri.v2);
-        mIndices.push_back(tri.v2);
-        mIndices.push_back(tri.v0);
+        Vertex &vertex0 = mVertices[tri.v0], &vertex1 = mVertices[tri.v1], &vertex2 = mVertices[tri.v2];
+
+        Triangle newTri(vertex0.pos(), vertex1.pos(), vertex2.pos());
+        oTriangles.push_back(newTri);
+
+        vertex0.r += newTri.normal.x();
+        vertex0.g += newTri.normal.y();
+        vertex0.b += newTri.normal.z();
+
+        vertex1.r += newTri.normal.x();
+        vertex1.g += newTri.normal.y();
+        vertex1.b += newTri.normal.z();
+
+        vertex2.r += newTri.normal.x();
+        vertex2.g += newTri.normal.y();
+        vertex2.b += newTri.normal.z();
     }
-    // I'll be using Vertex rgb to store normals
-    // For every vertex in each triangle rgb == 0 ? rgb = triangle.normal : rgb = (rgb + triangle.normal) / 2;
+    for (Vertex& v : mVertices)
+    {
+        QVector3D normal(v.r, v.g, v.b);
+        normal.normalize();
+        v.r = normal.x();
+        v.g = normal.y();
+        v.b = normal.z();
+    }
 }
 
 // Based on https://github.com/delfrrr/delaunator-cpp

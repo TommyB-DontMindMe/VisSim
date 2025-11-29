@@ -2,10 +2,11 @@
 #define POINTCLOUD_H
 
 #include "VisualObject.h"
+class Triangle;
 class PointCloud : public VisualObject
 {
 public:
-    PointCloud(const std::string& filename, const QVector3D& min, const QVector3D& max);
+    PointCloud(const std::string& filename, const QVector3D& min, const QVector3D& max, std::vector<Triangle>& oTriangles);
 };
 
 namespace Delaunay

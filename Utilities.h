@@ -3,7 +3,6 @@
 
 #include <QVulkanFunctions>
 #include <QMatrix4x4>
-#include <string>
 
 //Utility function for alignment:
 static inline VkDeviceSize aligned(VkDeviceSize v, VkDeviceSize byteAlign)

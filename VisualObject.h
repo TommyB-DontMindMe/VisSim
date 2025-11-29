@@ -19,7 +19,7 @@ public:
     inline std::vector<Vertex> getVertices() { return mVertices; }
     inline VkBuffer& getVBuffer() { return mVertexBuffer.mBuffer; }
     inline VkDeviceMemory& getVBufferMemory() { return mVertexBuffer.mBufferMemory; }
-	inline VkDeviceMemory& getIBufferMemory() { return mIndexBuffer.mBufferMemory; }
+    inline VkDeviceMemory& getIBufferMemory() { return mIndexBuffer.mBufferMemory; }
     inline void setVBuffer(VkBuffer bufferIn) { mVertexBuffer.mBuffer = bufferIn; }
     inline void setVBufferMemory(VkDeviceMemory bufferMemoryIn) { mVertexBuffer.mBufferMemory = bufferMemoryIn; }
     inline VkBuffer& getIBuffer() { return mIndexBuffer.mBuffer; }
@@ -32,9 +32,12 @@ public:
 	inline std::vector<Vertex> getVertices() const { return mVertices; }
 	inline std::vector<uint32_t> getIndices() const { return mIndices; }
 
-    QVector3D getPosition();
     void setPosition(float x, float y, float z);
     void setPosition(const QVector3D& newPosition) { setPosition(newPosition.x(), newPosition.y(), newPosition.z()); };
+    inline QVector3D position() const { return mPosition; }
+    inline QVector3D color() const { return mColor; }
+
+    void setColor(const QVector3D &newColor);
 
 protected:
     std::vector<Vertex> mVertices;
@@ -42,12 +45,14 @@ protected:
     QMatrix4x4 mMatrix;
     std::string mName;
 
+	QVector3D mPosition{ 0.0f, 0.0f, 0.0f };
+    QVector3D mColor{ 0.0f, 0.f, 0.0f };
+
 	BufferHandle mVertexBuffer;
 	BufferHandle mIndexBuffer;
     //VkPrimitiveTopology mTopology{ VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST }; //not used
 
-    int drawType{ 0 }; // 0 = fill, 1 = line
+    int drawType{ 0 }; // 0 = fill color, 1 = line color, 2 = fill phong
 };
 
 #endif // VISUALOBJECT_H
-
