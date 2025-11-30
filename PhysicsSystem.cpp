@@ -30,6 +30,7 @@ void PhysicsSystem::Update(float deltaTime)
             SweepOperations::Collision result = SweepOperations::SweepSphereTriangle(s.mPosition, s.mVelocity, s.mRadius, mTriangles.at(triIndex), triIndex);
             if (result.hit && result.t < earliest.t) earliest = result;
         }
+
         if (earliest.hit)
         {
             s.mPosition += s.mVelocity * deltaTime * earliest.t;

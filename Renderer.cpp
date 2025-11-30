@@ -33,7 +33,9 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     QVector3D boundsMax{ 5.0, 2.0, 5.0};
 
     mPhysicsSystem.mSphereModel = new ObjMesh(assetPath + "sphere.obj");
+    mPhysicsSystem.mSphereModel->setPosition({0.0, -10.0, 0.0});
     mPhysicsSystem.mSphereModel->setColor({1.0, 1.0, 1.0});
+    mObjects.push_back(mPhysicsSystem.mSphereModel);
 
     //Since the light is a special object we have only one of
     mLight = new Light();
@@ -41,6 +43,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     mLight->setColor({0.88, 0.7, 0.9});
 
     mTreeRoot = new Octree(mPhysicsSystem.mTriangles, AABB(boundsMin, boundsMax), 0);
+    mPhysicsSystem.mWorldSpace = mTreeRoot;
 
     mPhysicsSystem.mSpheres.push_back(Sphere(QVector3D(2.5, 8.0, 2.5), QVector3D(0,0,0)));
 
@@ -48,7 +51,7 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
     mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax, mPhysicsSystem.mTriangles));
     mObjects.push_back(new WorldAxis());
 
-    mObjects.at(1)->setColor({0.7, 0.7, 0.7});
+    mObjects.at(2)->setColor({0.7, 0.7, 0.7});
 
     // **************************************
 	// Optional: Insert all objects into a map
@@ -343,6 +346,9 @@ void Renderer::startNextFrame()
 {
     deltaTime = mTimer.elapsed() / 1000.0f;
     mTimer.restart();
+
+    mPhysicsSystem.Update(deltaTime);
+
     //Handeling input from keyboard and mouse is done in VulkanWindow
     //Has to be done each frame to get smooth movement
     mVulkanWindow->handleInput();
