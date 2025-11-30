@@ -5,11 +5,10 @@
 
 struct Sphere
 {
-    int mId;
+    Sphere(const QVector3D& position, const QVector3D& velocity, float radius = 0.15) : mPosition(position), mVelocity(velocity), mRadius(radius) {}
 
     QVector3D mPosition;
     QVector3D mVelocity;
-    QVector3D mAcceleration;
     float mRadius{0.15};
 };
 

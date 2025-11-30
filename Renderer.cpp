@@ -2,7 +2,9 @@
 #include <QVulkanFunctions>
 #include <QFile>
 #include <fstream>
+#include "ObjMesh.h"
 #include "PointCloud.h"
+#include "Sphere.h"
 #include "VulkanWindow.h"
 #include "Triangle.h"
 #include "stb_image.h"
@@ -27,19 +29,23 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         qDebug("\n\n");
     }
 
-    QVector3D boundsMin{ 0, -4.0, 0};
-    QVector3D boundsMax{ 5, 4, 5};
+    QVector3D boundsMin{ -5.0, -4.0, -5.0};
+    QVector3D boundsMax{ 5.0, 2.0, 5.0};
+
+    mPhysicsSystem.mSphereModel = new ObjMesh(assetPath + "sphere.obj");
+    mPhysicsSystem.mSphereModel->setColor({1.0, 1.0, 1.0});
 
     //Since the light is a special object we have only one of
     mLight = new Light();
     mLight->setPosition(QVector3D(2.5, 8.0, 2.5));
     mLight->setColor({0.88, 0.7, 0.9});
 
-    mTreeRoot = new Octree(mTriangles, AABB(boundsMin, boundsMax), 0);
+    mTreeRoot = new Octree(mPhysicsSystem.mTriangles, AABB(boundsMin, boundsMax), 0);
 
+    mPhysicsSystem.mSpheres.push_back(Sphere(QVector3D(2.5, 8.0, 2.5), QVector3D(0,0,0)));
 
     mObjects.push_back(mLight);
-    mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax, mTriangles));
+    mObjects.push_back(new PointCloud(assetPath + "lasdata.txt", boundsMin, boundsMax, mPhysicsSystem.mTriangles));
     mObjects.push_back(new WorldAxis());
 
     mObjects.at(1)->setColor({0.7, 0.7, 0.7});
@@ -51,7 +57,8 @@ Renderer::Renderer(QVulkanWindow *w, bool msaa) : mWindow(w)
         mMap.insert(std::pair<std::string, VisualObject*>{(*it)->getName(),*it});
 
 	//Inital position of the camera
-    mCamera.setPosition(QVector3D(-0.5, 3.5, -8));
+    mCamera.setPosition(QVector3D(0.0, 3.5, -8));
+    mCamera.lookAt(QVector3D(0.0, 3.5, -8), QVector3D(0.0, 0.0, 0), QVector3D(0.0, 1.0, 0.0));
 
     //Need access to our VulkanWindow so making a convenience pointer
     mVulkanWindow = dynamic_cast<VulkanWindow*>(w);
@@ -420,6 +427,17 @@ void Renderer::startNextFrame()
             mDeviceFunctions->vkCmdDraw(commandBuffer, (*it)->getVertices().size(), 1, 0, 0);
     }
 
+    // Instanced Sphere rendering
+    for (const Sphere& sphere : mPhysicsSystem.mSpheres)
+    {
+        QMatrix4x4 sphereMatrix;
+        sphereMatrix.translate(sphere.mPosition);
+        setModelMatrix(sphereMatrix, QVector3D(0.8, 0.8, 0.8));
+
+        mDeviceFunctions->vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mPhysicsSystem.mSphereModel->getVBuffer(), &vbOffset);
+        mDeviceFunctions->vkCmdBindIndexBuffer(commandBuffer, mPhysicsSystem.mSphereModel->getIBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        mDeviceFunctions->vkCmdDrawIndexed(commandBuffer, mPhysicsSystem.mSphereModel->getIndices().size(), 1, 0, 0, 0); //size == number of indices
+    }
 
     /***************************************/
 

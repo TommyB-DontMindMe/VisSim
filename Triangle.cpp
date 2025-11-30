@@ -38,18 +38,34 @@ AABB TriangleHelpers::TriangleBounds(const Triangle &Tri)
     return AABB(min, max);
 }
 
+/**
+ * Calculates the barycentric coordinates of a point P relative to triangle Tri
+ * @param The triangle the barycentric coordinates relate to
+ * @param The point whose coordinates you wish to find, should be on the same plane as the triangle Tri
+ * @return The Barycentric coordinates of point P in relation to Triangle Tri
+ */
+TriangleHelpers::Barycentric TriangleHelpers::CalculateBarycentric(const Triangle &Tri, const QVector3D &P)
+{
+    QVector3D AB = Tri.v1 - Tri.v0;
+    QVector3D AC = Tri.v2 - Tri.v0;
+    QVector3D AP = P - Tri.v0;
+
+    float d20 = QVector3D::dotProduct(AP, AB);
+    float d21 = QVector3D::dotProduct(AP, AC);
+    float denomMult = 1 / Tri.denom;
+
+    float v = (Tri.d11 * d20 - Tri.d01 * d21) * denomMult;
+    float w = (Tri.d00 * d21 - Tri.d01 * d20) * denomMult;
+    float u = 1.0f - v - w;
+
+    return Barycentric(u, v, w);
+}
+
 QVector3D TriangleHelpers::ClosestPoint(const Triangle &Tri, const QVector3D &point)
 {
     QVector3D P = ProjectPointOnPlane(Tri, point);
-    QVector3D AB = Tri.v1 - Tri.v0, AC = Tri.v2 - Tri.v0, AP = P - Tri.v0;
-
-    // from Real Time Collision Detection (Ericson, 2005, p.47-48)
-    float d20 = QVector3D::dotProduct(AP, AB);
-    float d21 = QVector3D::dotProduct(AP, AC);
-
-    float v = (Tri.d11 * d20 - Tri.d01 * d21) / Tri.denom;
-    float w = (Tri.d00 * d21 - Tri.d01 * d20) / Tri.denom;
-    float u = 1.0f - v - w;
+    Barycentric bary = CalculateBarycentric(Tri, point);
+    float v = bary.v, w = bary.w, u = bary.u;
 
     // If the projected point is inside the triangle then it will be the closes point
     if (v >= 0 && w >= 0 && u >= 0) return P;
@@ -80,4 +96,10 @@ void TriangleHelpers::ComputeVariables(Triangle &Tri)
     Tri.d01 = QVector3D::dotProduct(AB, AC);
     Tri.d11 = QVector3D::dotProduct(AC, AC);
     Tri.denom = Tri.d00 * Tri.d11 - Tri.d01 * Tri.d01;
+}
+
+bool TriangleHelpers::PointInTriangle(const Triangle &Tri, const QVector3D &P)
+{
+    Barycentric bary = CalculateBarycentric(Tri, P);
+    return bary.isInside();
 }

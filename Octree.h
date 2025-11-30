@@ -22,6 +22,8 @@ public:
     void subdivide();
     void insert(int index);
     void query(const AABB& iBounds, std::vector<int>& oIndices) const;
+    void query(const QVector3D& iPoint, std::vector<int>& oIndices) const;
+    void query(const Sphere& iSphere, std::vector<int>& oIndices) const;
 };
 
 #endif // OCTREE_H

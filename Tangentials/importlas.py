@@ -10,14 +10,22 @@ las = laspy.read(input_file, laz_backend=laspy.LazBackend.Laszip)
 
 # Decimering implementert i Python ved hjelp av Anthropic Claude
 # Kommentarer er mine egne
+# Fjern punkter med ekstreme y verdier
+prefiltery = numpy.array(las.y)
+preminy, premaxy = numpy.percentile(prefiltery, [2, 98])
+outliermask = (prefiltery >= preminy) & (prefiltery <= premaxy)
+
+las.points = las.points[outliermask]
+
 # Split i x,y,z komponenter
 las_x = numpy.array(las.x)
-las_y = numpy.array(las.y)
-las_z = numpy.array(las.z)
+las_y = numpy.array(las.z)
+las_z = numpy.array(las.y)
 
 # Finn de lavest og høyeste X og Z koordinatene
 x_min, x_max = las_x.min(), las_x.max()
 z_min, z_max = las_z.min(), las_z.max()
+
 
 # Finn koordinater relative til "minste" punkt og rundt ned til helt tall
 x_idx = numpy.floor((las_x - x_min) / 5).astype(int)
@@ -36,12 +44,13 @@ decimated_points = numpy.zeros((len(unique_ids), 3))
 # Fyll in XYZ verdier til alle punkter som passer I hver celle
 for i, grid_id in enumerate(unique_ids):
     mask = grid_ids == grid_id    # Bruk en boolean mask for a filtrere etter 1d koordinater fra tidligere
-    decimated_points[i, 0] = las_x[mask].mean()
-    decimated_points[i, 1] = las_y[mask].mean()
-    decimated_points[i, 2] = las_z[mask].mean()
+    decimated_points[i, 0] = numpy.median(las_x[mask])
+    decimated_points[i, 1] = numpy.median(las_y[mask])
+    decimated_points[i, 2] = numpy.median(las_z[mask])
+
+
 
 # Skriv til ASCII-fil
-
 with open(output_file, 'w') as f:
     las_num = len(decimated_points)
     f.write(f"{las_num} \n")

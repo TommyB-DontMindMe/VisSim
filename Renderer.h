@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "Camera.h"
 #include "Octree.h"
+#include "PhysicsSystem.h"
 #include "Triangle.h"
 #include "TriangleSurface.h"
 #include "VisualObject.h"
@@ -45,7 +46,7 @@ public:
     std::unordered_map<std::string, VisualObject*>& getMap() { return mMap; }
 
     Octree* mTreeRoot;
-    std::vector<Triangle> mTriangles;   // Stores all triangles in the scene
+    PhysicsSystem mPhysicsSystem;   // Stores all physics Objects in the scene
 
 protected:
 

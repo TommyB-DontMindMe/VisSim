@@ -71,3 +71,31 @@ void Octree::query(const AABB &iBounds, std::vector<int> &oIndices) const
         }
     }
 }
+
+void Octree::query(const QVector3D &iPoint, std::vector<int> &oIndices) const
+{
+    if (!mBounds.containsPoint(iPoint)) return;
+
+    if (isLeaf()) oIndices.insert(oIndices.end(), mContent.begin(), mContent.end());
+    else
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            if (mChildren[i]->mBounds.containsPoint(iPoint)) mChildren[i]->query(iPoint, oIndices);
+        }
+    }
+}
+
+void Octree::query(const Sphere &iSphere, std::vector<int> &oIndices) const
+{
+    if (!mBounds.intersectsSphere(iSphere)) return;
+
+    if (isLeaf()) oIndices.insert(oIndices.end(), mContent.begin(), mContent.end());
+    else
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            if (mChildren[i]->mBounds.intersectsSphere(iSphere)) mChildren[i]->query(iSphere, oIndices);
+        }
+    }
+}
